@@ -1,8 +1,1 @@
-<<<<<<< HEAD
-python-telegram-bot[socks]>=22.0
-=======
 aiogram
-pymongo
-motor
-bson
->>>>>>> 29a578380437e9cd7b505fb62e021255d9b3c58d
