@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Мой Telegram Mini App</title>
+
+    <!-- Подключение Telegram WebApp API -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .user-card {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .user-info p {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .label {
+            font-weight: 600;
+            color: var(--tg-theme-hint-color, #8e8e93);
+        }
+
+        .value {
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .save-btn {
+            background: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 16px;
+            padding: 8px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Добро пожаловать в Mini App!</h1>
+            <p>Ваши данные из Telegram</p>
+        </div>
+
+        <div class="user-card">
+            <div class="user-info" id="user-info">
+                <p>Загрузка данных пользователя...</p>
+            </div>
+        </div>
+
+        <button class="save-btn" id="save-btn">Сохранить в базу данных</button>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        // Инициализация Telegram WebApp
+        const tg = window.Telegram.WebApp;
+
+        // Расширяем на весь экран
+        tg.expand();
+
+        // Применяем тему Telegram
+        document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
+        document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000000');
+        document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#f0f0f0');
+        document.documentElement.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color || '#8e8e93');
+        document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#2481cc');
+        document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff');
+
+        // Получаем данные пользователя
+        const user = tg.initDataUnsafe?.user;
+        const userInfoDiv = document.getElementById('user-info');
+        const statusDiv = document.getElementById('status');
+        const saveBtn = document.getElementById('save-btn');
+
+        if (user) {
+            // Отображаем данные пользователя
+            userInfoDiv.innerHTML = `
+                <p><span class="label">ID:</span> <span class="value">${user.id}</span></p>
+                <p><span class="label">Имя:</span> <span class="value">${user.first_name || 'Не указано'}</span></p>
+                <p><span class="label">Фамилия:</span> <span class="value">${user.last_name || 'Не указана'}</span></p>
+                <p><span class="label">Username:</span> <span class="value">@${user.username || 'Нет username'}</span></p>
+                <p><span class="label">Язык:</span> <span class="value">${user.language_code || 'Не указан'}</span></p>
+                <p><span class="label">Premium:</span> <span class="value">${user.is_premium ? 'Да' : 'Нет'}</span></p>
+            `;
+
+            // Обработчик кнопки сохранения в Cloud Storage Telegram
+            saveBtn.addEventListener('click', () => {
+                const userData = {
+                    id: user.id,
+                    first_name: user.first_name,
+                    last_name: user.last_name,
+                    username: user.username,
+                    language_code: user.language_code,
+                    is_premium: user.is_premium,
+                    auth_date: tg.initDataUnsafe?.auth_date
+                };
+
+                // Сохраняем в Cloud Storage Telegram (простой вариант)
+                tg.CloudStorage.set('user_data', JSON.stringify(userData), (err) => {
+                    if (err) {
+                        showStatus('Ошибка сохранения данных: ' + err, 'error');
+                    } else {
+                        showStatus('Данные успешно сохранены в Cloud Storage!', 'success');
+                    }
+                });
+            });
+        } else {
+            userInfoDiv.innerHTML = '<p>Не удалось загрузить данные пользователя. Откройте приложение через Telegram.</p>';
+            saveBtn.disabled = true;
+        }
+
+        // Функция для показа статуса
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+
+            // Автоматически скрываем через 5 секунд
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Сообщаем Telegram, что приложение готово
+        tg.ready();
+    </script>
+</body>
+</html>
