@@ -22,7 +22,7 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient
 
 # ============= КОНФИГ =============
-BOT_TOKEN = "8990574965:AAF65OxVb64PFoAjCpVVeUNvi3WgIJjWi9Q"
+BOT_TOKEN = ""
 ADMINS = {6654986539, 8441673923, 869665716}
 ADMIN_PASSWORD = "aecandrysha"
 ADMIN_SESSIONS: set[int] = set()
