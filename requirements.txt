@@ -2,3 +2,4 @@ aiogram
 pymongo
 motor
 bson
+aiohttp
